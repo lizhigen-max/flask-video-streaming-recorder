@@ -1,8 +1,5 @@
 from flask import session, redirect, url_for, request, render_template, jsonify
-
 from controller.modules.user import user_blu
-from controller.utils.camera import VideoCamera
-
 
 # 登录
 @user_blu.route("/login", methods=["GET", "POST"])
@@ -42,17 +39,26 @@ def logout():
 # 录制状态
 @user_blu.route('/record_status', methods=['POST'])
 def record_status():
-    global video_camera
-    if video_camera is None:
-        video_camera = VideoCamera()
+    from controller.utils.camera import singleton
+    video_camera = singleton
 
     json = request.get_json()
-
     status = json['status']
 
     if status == "true":
-        video_camera.start_record()
-        return jsonify(result="started")
+        thID = video_camera.start_record()
+        return jsonify(result="started", id=thID)
     else:
-        video_camera.stop_record()
-        return jsonify(result="stopped")
+        path = video_camera.stop_record(json['id'])
+        return jsonify(result='stoped', path= path)
+
+
+@user_blu.route('/onunload', methods=['POST'])
+def onunload():
+    from controller.utils.camera import singleton
+    video_camera = singleton
+    json = request.get_json()
+    if not json['id'] == -1:
+        path = video_camera.stop_record(json['id'])
+        return jsonify(result='stoped', path=path)
+    return jsonify(result='Nothing nead to stop', path=None)

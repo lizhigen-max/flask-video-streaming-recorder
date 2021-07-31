@@ -1,9 +1,5 @@
 from flask import session, render_template, redirect, url_for, Response
 from controller.modules.home import home_blu
-from controller.utils.camera import VideoCamera
-
-video_camera = None
-global_frame = None
 
 
 # 主页
@@ -18,11 +14,8 @@ def index():
 
 # 获取视频流
 def video_stream():
-    global video_camera
-    global global_frame
-
-    if video_camera is None:
-        video_camera = VideoCamera()
+    from controller.utils.camera import singleton
+    video_camera = singleton
 
     while True:
         frame = video_camera.get_frame()
